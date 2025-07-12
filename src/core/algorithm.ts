@@ -205,7 +205,7 @@ function getConnectionDirection(rect: Rect, conn: ConnectionPoint): "left" | "ri
     return null;
 }
 
-function shiftConnectionOutward(rect: Rect, conn: ConnectionPoint, margin: number): Point {
+export function shiftConnectionOutward(rect: Rect, conn: ConnectionPoint, margin: number): Point {
     const side = getConnectionDirection(rect, conn);
     if (!side) return conn.point;
 

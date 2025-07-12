@@ -2,29 +2,35 @@ import { useState, useEffect } from "react";
 import CanvasBoard from "./components/CanvasBoard";
 import { dataConverter } from "./core/algorithm";
 import type { Rect, ConnectionPoint, Point, Graph } from "./types/types";
+import { dijkstraShortestPath } from "./core/dijkstraShortestPath";
 import { buildGraph } from "./core/algorithm";
+
+import { shiftConnectionOutward } from "./core/algorithm";
 
 const getConnectionPoints = (rects: Rect[]): ConnectionPoint[] => {
   return [
     {
       // Правая грань первого
       point: {
-        x: rects[0].position.x + rects[0].size.width / 2,
-        y: rects[0].position.y,
+        x: rects[0].position.x,
+        y: rects[0].position.y + rects[0].size.height / 2,
       },
-      angle: 0,
+      angle: 90,
     },
     {
       // Левая грань второго
       point: {
-        x: rects[1].position.x,
-        y: rects[1].position.y + rects[1].size.height / 2,
+        x: rects[1].position.x + rects[1].size.width / 2,
+        y: rects[1].position.y,
       },
-      angle: 90,
+      angle: 0,
     },
   ];
 };
 
+function pointKey(point: Point): string {
+  return `${point.x}:${point.y}`;
+}
 
 function App() {
   const [rects, setRects] = useState<Rect[]>([
@@ -42,21 +48,52 @@ function App() {
   const [vertical, setVertical] = useState();
 
 
-  // 🔁 Recalculate path when inputs change
+  // // 🔁 Recalculate path when inputs change
+  // useEffect(() => {
+  //   const [cp1, cp2] = connectionPoints;
+  //   const [rect1, rect2] = rects;
+
+  //   const { gridPoints, graph, horizontal, vertical } = dataConverter(rect1, rect2, cp1, cp2);
+  //   console.log(graph)
+
+  //   setPathPoints(gridPoints); // or actual path later
+  //   setGraph(graph);
+
+  //   setHorizontal(horizontal);
+  //   setVertical(vertical);
+
+  // }, [rects]);
+
   useEffect(() => {
     const [cp1, cp2] = connectionPoints;
     const [rect1, rect2] = rects;
 
     const { gridPoints, graph, horizontal, vertical } = dataConverter(rect1, rect2, cp1, cp2);
-    console.log(graph)
 
-    setPathPoints(gridPoints); // or actual path later
     setGraph(graph);
-
     setHorizontal(horizontal);
     setVertical(vertical);
 
+    console.log('graph', graph)
+
+
+
+    // Try finding the shortest path between shifted connection points
+
+    const start = shiftConnectionOutward(rect1, cp1, 20);
+    const end = shiftConnectionOutward(rect2, cp2, 20);
+
+    if (graph.has(pointKey(start)) && graph.has(pointKey(end))) {
+      const path = dijkstraShortestPath(graph, start, end);
+      setPathPoints(path);
+    } else {
+      console.warn("Start or end point missing from graph:", start, end);
+    }
+
+
+
   }, [rects]);
+
 
   return (
     <CanvasBoard

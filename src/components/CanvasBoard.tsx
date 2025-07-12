@@ -97,13 +97,18 @@ const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, ve
         //     ctx.stroke();
         // });
 
-        // Draw path points (as red circles)
-        ctx.fillStyle = "#b1f4e3";
-        path.forEach((p) => {
+        // 🔴 Draw the path as a red line
+        if (path.length > 1) {
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
-            ctx.fill();
-        });
+            ctx.moveTo(path[0].x, path[0].y);
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(path[i].x, path[i].y);
+            }
+            ctx.stroke();
+        }
+
 
         if (graph) {
             ctx.strokeStyle = "gray";
