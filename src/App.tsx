@@ -20,10 +20,10 @@ const getConnectionPoints = (rects: Rect[]): ConnectionPoint[] => {
     {
       // Левая грань второго
       point: {
-        x: rects[1].position.x + rects[1].size.width / 2,
-        y: rects[1].position.y,
+        x: rects[1].position.x,
+        y: rects[1].position.y - rects[1].size.height / 2,
       },
-      angle: 0,
+      angle: 270,
     },
   ];
 };
