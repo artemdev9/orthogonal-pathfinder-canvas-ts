@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import type { Point, Rect, ConnectionPoint, Graph } from "../types/types";
+import type { Point, Rect } from "../types/types";
+import type { ConnectionPoint, Graph } from "../types/types";
 
 type Props = {
     rects: Rect[];
@@ -7,12 +8,14 @@ type Props = {
     onRectsChange: (updatedRects: Rect[]) => void;
     path: Point[];
     graph: Graph;
-    onConnectionPointClick?: (index: number) => void;
+    horizontalLines: number[];
+    verticalLines: number[];
+    onRectsChange: (updatedRects: Rect[]) => void;
 };
 
 
 
-const CanvasBoard = ({ rects, connectionPoints, onRectsChange, path, graph }: Props) => {
+const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, verticalLines, onRectsChange }: Props) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const offsetRef = useRef<Point>({ x: 0, y: 0 });
@@ -35,8 +38,27 @@ const CanvasBoard = ({ rects, connectionPoints, onRectsChange, path, graph }: Pr
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-
-
+        // // Draw grid lines if provided
+        // if (horizontalLines) {
+        //     ctx.strokeStyle = "#e0e0e0";
+        //     ctx.lineWidth = 1;
+        //     horizontalLines.forEach(y => {
+        //         ctx.beginPath();
+        //         ctx.moveTo(0, y);
+        //         ctx.lineTo(canvas.width, y);
+        //         ctx.stroke();
+        //     });
+        // }
+        // if (verticalLines) {
+        //     ctx.strokeStyle = "#e0e0e0";
+        //     ctx.lineWidth = 1;
+        //     verticalLines.forEach(x => {
+        //         ctx.beginPath();
+        //         ctx.moveTo(x, 0);
+        //         ctx.lineTo(x, canvas.height);
+        //         ctx.stroke();
+        //     });
+        // }
 
 
         // Прямоугольники
@@ -61,19 +83,19 @@ const CanvasBoard = ({ rects, connectionPoints, onRectsChange, path, graph }: Pr
         ctx.strokeStyle = "#000000";
         ctx.lineWidth = 1;
 
-        path.forEach((p) => {
-            // Horizontal line
-            ctx.beginPath();
-            ctx.moveTo(0, p.y);
-            ctx.lineTo(canvas.width, p.y);
-            ctx.stroke();
+        // path.forEach((p) => {
+        //     // Horizontal line
+        //     ctx.beginPath();
+        //     ctx.moveTo(0, p.y);
+        //     ctx.lineTo(canvas.width, p.y);
+        //     ctx.stroke();
 
-            // Vertical line
-            ctx.beginPath();
-            ctx.moveTo(p.x, 0);
-            ctx.lineTo(p.x, canvas.height);
-            ctx.stroke();
-        });
+        //     // Vertical line
+        //     ctx.beginPath();
+        //     ctx.moveTo(p.x, 0);
+        //     ctx.lineTo(p.x, canvas.height);
+        //     ctx.stroke();
+        // });
 
         // Draw path points (as red circles)
         ctx.fillStyle = "#b1f4e3";
@@ -113,7 +135,7 @@ const CanvasBoard = ({ rects, connectionPoints, onRectsChange, path, graph }: Pr
 
         // Линия
         // Remove path drawing logic, only show points
-    }, [rects, connectionPoints, canvasSize, graph]);
+    }, [rects, connectionPoints, path, graph, horizontalLines, verticalLines, canvasSize]);
 
     //  helper functions rect dragging 
     function isRectHit(rect: Rect, point: Point): boolean {

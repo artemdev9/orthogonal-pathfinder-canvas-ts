@@ -69,6 +69,90 @@ function getBoundingBox(rects: Rect[], margin: number) {
     return { minX, maxX, minY, maxY };
 }
 
+function buildStructuredGraph(
+    gridPoints: Point[],
+    grid2D: Map<number, Map<number, Point>>,
+    xCoords: number[],
+    yCoords: number[]
+): Graph {
+    const graph: Graph = new Map();
+
+    for (const p of gridPoints) {
+        const neighbors: { point: Point; weight: number }[] = [];
+
+        const xIndex = xCoords.indexOf(p.x);
+        const yIndex = yCoords.indexOf(p.y);
+
+        // Scan LEFT
+        for (let i = xIndex - 1; i >= 0; i--) {
+            const x = xCoords[i];
+            const exists = grid2D.get(p.y)?.get(x);
+            if (!exists) break; // there's a gap
+            if (i === xIndex - 1) {
+                neighbors.push({ point: exists, weight: distance(p, exists) });
+                break;
+            }
+        }
+
+        // Scan RIGHT
+        for (let i = xIndex + 1; i < xCoords.length; i++) {
+            const x = xCoords[i];
+            const exists = grid2D.get(p.y)?.get(x);
+            if (!exists) break;
+            if (i === xIndex + 1) {
+                neighbors.push({ point: exists, weight: distance(p, exists) });
+                break;
+            }
+        }
+
+        // Scan UP
+        for (let i = yIndex - 1; i >= 0; i--) {
+            const y = yCoords[i];
+            const exists = grid2D.get(y)?.get(p.x);
+            if (!exists) break;
+            if (i === yIndex - 1) {
+                neighbors.push({ point: exists, weight: distance(p, exists) });
+                break;
+            }
+        }
+
+        // Scan DOWN
+        for (let i = yIndex + 1; i < yCoords.length; i++) {
+            const y = yCoords[i];
+            const exists = grid2D.get(y)?.get(p.x);
+            if (!exists) break;
+            if (i === yIndex + 1) {
+                neighbors.push({ point: exists, weight: distance(p, exists) });
+                break;
+            }
+        }
+
+        graph.set(pointKey(p), { point: p, neighbors });
+    }
+
+    return graph;
+}
+
+
+
+function printGrid(
+    grid: Map<number, Map<number, Point>>,
+    xCoords: number[],
+    yCoords: number[]
+) {
+    console.log('\nGrid visualization:\n');
+
+    for (const y of yCoords) {
+        let row = '';
+        for (const x of xCoords) {
+            row += grid.get(y)?.has(x) ? '● ' : '· ';
+        }
+        console.log(row);
+    }
+
+    console.log('\nLegend: ● = point, · = empty\n');
+}
+
 function getEnhancedGridPoints(horizontal: number[], vertical: number[]): Point[] {
     const points: Point[] = [];
 
@@ -253,10 +337,32 @@ export const dataConverter = (
         }
     }
 
-    const graph = buildGraph(gridPoints);
+    gridPoints = Array.from(
+        new Map(gridPoints.map(p => [pointKey(p), p])).values()
+    );
+
+    // const graph = buildGraph(gridPoints);
 
     console.log('Final grid points: ', gridPoints);
-    console.log('Graph structure:', graph);
+    // console.log('Graph structure:', graph);
 
-    return { gridPoints, graph };
+
+    const grid2D = new Map<number, Map<number, Point>>();
+
+    for (const p of gridPoints) {
+        if (!grid2D.has(p.y)) grid2D.set(p.y, new Map());
+        grid2D.get(p.y)!.set(p.x, p);
+    }
+
+
+    const xCoords = Array.from(new Set(gridPoints.map(p => p.x))).sort((a, b) => a - b);
+    const yCoords = Array.from(new Set(gridPoints.map(p => p.y))).sort((a, b) => a - b);
+
+    printGrid(grid2D, xCoords, yCoords);
+
+    const graph = buildStructuredGraph(gridPoints, grid2D, xCoords, yCoords);
+
+
+
+    return { gridPoints, graph, horizontal, vertical };
 };

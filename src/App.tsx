@@ -38,17 +38,23 @@ function App() {
   const [pathPoints, setPathPoints] = useState<Point[]>([]);
   const [graph, setGraph] = useState<Graph>(new Map());
 
+  const [horizontal, setHorizontal] = useState();
+  const [vertical, setVertical] = useState();
+
 
   // 🔁 Recalculate path when inputs change
   useEffect(() => {
     const [cp1, cp2] = connectionPoints;
     const [rect1, rect2] = rects;
 
-    const { gridPoints, graph } = dataConverter(rect1, rect2, cp1, cp2);
+    const { gridPoints, graph, horizontal, vertical } = dataConverter(rect1, rect2, cp1, cp2);
     console.log(graph)
 
     setPathPoints(gridPoints); // or actual path later
     setGraph(graph);
+
+    setHorizontal(horizontal);
+    setVertical(vertical);
 
   }, [rects]);
 
@@ -58,6 +64,8 @@ function App() {
       connectionPoints={connectionPoints}
       path={pathPoints}
       graph={graph}
+      horizontalLines={horizontal}
+      verticalLines={vertical}
       onRectsChange={setRects}
     />
   );
