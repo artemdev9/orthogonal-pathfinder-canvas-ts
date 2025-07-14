@@ -1,6 +1,6 @@
 import type { Point, Rect, ConnectionPoint, Graph, PathNode, Direction } from "../types/types";
 
-function getHorizontalLines(rects: Rect[], connections: ConnectionPoint[], margin: number): number[] {
+export function getHorizontalLines(rects: Rect[], margin: number): number[] {
     const lines = new Set<number>();
 
     rects.forEach(rect => {
@@ -10,16 +10,11 @@ function getHorizontalLines(rects: Rect[], connections: ConnectionPoint[], margi
         lines.add(bottom);
     });
 
-    console.log('Lines from getHorizontalLines:', Array.from(lines).sort((a, b) => a - b));
-
-    // connections.forEach(conn => {
-    //     lines.add(conn.point.y);
-    // });
 
     return Array.from(lines).sort((a, b) => a - b);
 }
 
-function getVerticalLines(rects: Rect[], connections: ConnectionPoint[], margin: number): number[] {
+export function getVerticalLines(rects: Rect[], margin: number): number[] {
     const lines = new Set<number>();
 
     rects.forEach(rect => {
@@ -28,10 +23,6 @@ function getVerticalLines(rects: Rect[], connections: ConnectionPoint[], margin:
         lines.add(left);
         lines.add(right);
     });
-
-    // connections.forEach(conn => {
-    //     lines.add(conn.point.x);
-    // });
 
     return Array.from(lines).sort((a, b) => a - b);
 }
@@ -67,6 +58,62 @@ function getBoundingBox(rects: Rect[], margin: number) {
     const maxY = Math.max(...ys);
 
     return { minX, maxX, minY, maxY };
+}
+
+export function isPointOnRectEdge(point: Point, rect: Rect): boolean {
+    const { x, y } = rect.position;
+    const { width, height } = rect.size;
+
+    const left = x - width / 2;
+    const right = x + width / 2;
+    const top = y - height / 2;
+    const bottom = y + height / 2;
+
+    const tolerance = 0.5;
+
+    const onLeftOrRight =
+        (Math.abs(point.x - left) < tolerance || Math.abs(point.x - right) < tolerance) &&
+        point.y >= top - tolerance && point.y <= bottom + tolerance;
+
+    const onTopOrBottom =
+        (Math.abs(point.y - top) < tolerance || Math.abs(point.y - bottom) < tolerance) &&
+        point.x >= left - tolerance && point.x <= right + tolerance;
+
+    return onLeftOrRight || onTopOrBottom;
+}
+
+export function isValidConnectionAngle(point: Point, angle: number, rect: Rect): boolean {
+    const { x, y } = rect.position;
+    const { width, height } = rect.size;
+
+    const left = x - width / 2;
+    const right = x + width / 2;
+    const top = y - height / 2;
+    const bottom = y + height / 2;
+
+    const tolerance = 0.5;
+
+    // Top edge ➡️ angle should be 90 (pointing up)
+    if (Math.abs(point.y - top) < tolerance && point.x >= left - tolerance && point.x <= right + tolerance) {
+        return angle === 90;
+    }
+
+    // Bottom edge ➡️ angle should be 270 (pointing down)
+    if (Math.abs(point.y - bottom) < tolerance && point.x >= left - tolerance && point.x <= right + tolerance) {
+        return angle === 270;
+    }
+
+    // Left edge ➡️ angle should be 0 (pointing left)
+    if (Math.abs(point.x - left) < tolerance && point.y >= top - tolerance && point.y <= bottom + tolerance) {
+        return angle === 0;
+    }
+
+    // Right edge ➡️ angle should be 180 (pointing right)
+    if (Math.abs(point.x - right) < tolerance && point.y >= top - tolerance && point.y <= bottom + tolerance) {
+        return angle === 180;
+    }
+
+    return false;
 }
 
 function buildStructuredGraph(
@@ -133,25 +180,7 @@ function buildStructuredGraph(
     return graph;
 }
 
-function printGrid(
-    grid: Map<number, Map<number, Point>>,
-    xCoords: number[],
-    yCoords: number[]
-) {
-    console.log('\nGrid visualization:\n');
-
-    for (const y of yCoords) {
-        let row = '';
-        for (const x of xCoords) {
-            row += grid.get(y)?.has(x) ? '● ' : '· ';
-        }
-        console.log(row);
-    }
-
-    console.log('\nLegend: ● = point, · = empty\n');
-}
-
-function getEnhancedGridPoints(horizontal: number[], vertical: number[]): Point[] {
+export function getEnhancedGridPoints(horizontal: number[], vertical: number[]): Point[] {
     const points: Point[] = [];
 
     for (let yi = 0; yi < horizontal.length - 1; yi++) {
@@ -220,35 +249,6 @@ function shiftConnectionOutward(rect: Rect, conn: ConnectionPoint, margin: numbe
 
 function distance(a: Point, b: Point): number {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); // Манхэттенское
-}
-
-export function buildGraph(points: Point[]): Graph {
-    const graph: Graph = new Map();
-
-    const pointMap = new Map<string, Point>();
-    for (const p of points) {
-        pointMap.set(pointKey(p), p);
-    }
-
-    for (const a of points) {
-        const neighbors: { point: Point; weight: number }[] = [];
-
-        for (const b of points) {
-            const isHorizontal = a.y === b.y && a.x !== b.x;
-            const isVertical = a.x === b.x && a.y !== b.y;
-
-            if ((isHorizontal || isVertical) && distance(a, b) <= 2000) {
-                neighbors.push({
-                    point: b,
-                    weight: distance(a, b)
-                });
-            }
-        }
-
-        graph.set(pointKey(a), { point: a, neighbors });
-    }
-
-    return graph;
 }
 
 function pointKey(point: Point): string {
@@ -344,20 +344,34 @@ export function dijkstraShortestPath(graph: Graph, start: Point, end: Point): Po
     return path;
 }
 
+
 export const dataConverter = (
     rect1: Rect,
     rect2: Rect,
     cPoint1: ConnectionPoint,
     cPoint2: ConnectionPoint,
-    shapeMargin
-): { gridPoints: Point[]; graph: Graph } => {
+    shapeMargin: number
+): { gridPoints: Point[]; graph: Graph; horizontal: number[]; vertical: number[]; path: Point[] } => {
+
+
     const rects = [rect1, rect2];
     const connections = [cPoint1, cPoint2];
 
+    connections.forEach((conn, i) => {
+        const rect = rects[i];
+        if (!isPointOnRectEdge(conn.point, rect)) {
+            throw new Error(`Connection point ${i + 1} is not on the edge of rectangle ${i + 1}`);
+        }
+        if (!isValidConnectionAngle(conn.point, conn.angle, rect)) {
+            throw new Error(`Connection angle ${i + 1} is not perpendicular or not facing outward for rectangle ${i + 1}`);
+        }
+    });
+
+
     const margin = shapeMargin;
 
-    let horizontal = getHorizontalLines(rects, connections, margin);
-    let vertical = getVerticalLines(rects, connections, margin);
+    let horizontal = getHorizontalLines(rects, margin);
+    let vertical = getVerticalLines(rects, margin);
 
     const { minX, maxX, minY, maxY } = getBoundingBox(rects, margin);
     const boundingVerticals = [minX, maxX];
@@ -427,7 +441,6 @@ export const dataConverter = (
     const xCoords = Array.from(new Set(gridPoints.map(p => p.x))).sort((a, b) => a - b);
     const yCoords = Array.from(new Set(gridPoints.map(p => p.y))).sort((a, b) => a - b);
 
-    printGrid(grid2D, xCoords, yCoords);
 
     const graph = buildStructuredGraph(gridPoints, grid2D, xCoords, yCoords);
 
@@ -441,5 +454,5 @@ export const dataConverter = (
         console.warn("Start or end point missing from graph:", start, end);
     }
 
-    return { gridPoints, graph, horizontal, vertical, path };
+    return { gridPoints, graph, horizontal, vertical, path: path ?? [] };
 };

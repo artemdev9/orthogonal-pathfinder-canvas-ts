@@ -10,9 +10,7 @@ type Props = {
     graph: Graph;
     horizontalLines: number[];
     verticalLines: number[];
-    onRectsChange: (updatedRects: Rect[]) => void;
     showRectLines: boolean;
-    showPathPoints: boolean;
     showWeightedGraph: boolean;
     showShortestPath: boolean;
 };
@@ -21,7 +19,7 @@ type Props = {
 // showWeightedGraph={showWeightedGraph}
 // showShortestPath={showShortestPath}
 
-const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, verticalLines, onRectsChange, showRectLines, showPathPoints, showWeightedGraph, showShortestPath }: Props) => {
+const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, verticalLines, onRectsChange, showRectLines, showWeightedGraph, showShortestPath }: Props) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const offsetRef = useRef<Point>({ x: 0, y: 0 });
@@ -134,9 +132,6 @@ const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, ve
             }
         }
 
-
-        // Линия
-        // Remove path drawing logic, only show points
     }, [rects, connectionPoints, path, graph, horizontalLines, verticalLines, canvasSize]);
 
     //  helper functions rect dragging 

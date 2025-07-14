@@ -1,77 +1,79 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import CanvasBoard from "./components/CanvasBoard";
 import ControlPanel from "./components/ControlPanel";
 import { dataConverter } from "./core/algorithm";
-import type { Rect, ConnectionPoint, Point, Graph } from "./types/types";
+import type { Rect, ConnectionPoint, Point, Graph, ConnectorSide } from "./types/types";
 
+// Type for connector side
+
+// Clamp connector position to [0.01, 0.99]
+const safePosition = (pos: number): number => Math.max(0.01, Math.min(0.99, pos));
+
+// Compute connection points for both shapes
 const getConnectionPoints = (
   rects: Rect[],
   shapeAConnectorPosition: number,
   shapeBConnectorPosition: number,
-  shapeASide: "top" | "bottom" | "left" | "right",
-  shapeBSide: "top" | "bottom" | "left" | "right"
-): ConnectionPoint[] => {
+  shapeASide: ConnectorSide,
+  shapeBSide: ConnectorSide
+): [ConnectionPoint, ConnectionPoint] => {
   const computeConnector = (
     rect: Rect,
-    side: "top" | "bottom" | "left" | "right",
+    side: ConnectorSide,
     position: number
   ): ConnectionPoint => {
     const { x, y } = rect.position;
     const { width, height } = rect.size;
-
     switch (side) {
       case "top":
         return {
-          point: { x: x - width / 2 + width * position, y: y - height / 2 },
+          point: { x: x - width / 2 + width * safePosition(position), y: y - height / 2 },
           angle: 90,
         };
       case "bottom":
         return {
-          point: { x: x - width / 2 + width * position, y: y + height / 2 },
+          point: { x: x - width / 2 + width * safePosition(position), y: y + height / 2 },
           angle: 270,
         };
       case "left":
         return {
-          point: { x: x - width / 2, y: y - height / 2 + height * position },
+          point: { x: x - width / 2, y: y - height / 2 + height * safePosition(position) },
           angle: 0,
         };
       case "right":
         return {
-          point: { x: x + width / 2, y: y - height / 2 + height * position },
+          point: { x: x + width / 2, y: y - height / 2 + height * safePosition(position) },
           angle: 180,
         };
     }
   };
-
   return [
     computeConnector(rects[0], shapeASide, shapeAConnectorPosition),
     computeConnector(rects[1], shapeBSide, shapeBConnectorPosition),
   ];
 };
 
-
 function App() {
   // Visual toggles
-  const [showRectLines, setShowRectLines] = useState(false);
-  const [showPathPoints, setShowPathPoints] = useState(false);
-  const [showWeightedGraph, setShowWeightedGraph] = useState(false);
-  const [showShortestPath, setShowShortestPath] = useState(true);
+  const [showRectLines, setShowRectLines] = useState<boolean>(false);
+  const [showPathPoints, setShowPathPoints] = useState<boolean>(false);
+  const [showWeightedGraph, setShowWeightedGraph] = useState<boolean>(false);
+  const [showShortestPath, setShowShortestPath] = useState<boolean>(true);
 
   // Shape margin & connector positions
-  const [shapeMargin, setShapeMargin] = useState(10);
-  const [shapeAConnectorPosition, setShapeAConnectorPosition] = useState(0.5);
-  const [shapeBConnectorPosition, setShapeBConnectorPosition] = useState(0.5);
-  const [shapeASide, setShapeASide] = useState<"top" | "bottom" | "left" | "right">("top");
-  const [shapeBSide, setShapeBSide] = useState<"top" | "bottom" | "left" | "right">("bottom");
+  const [shapeMargin, setShapeMargin] = useState<number>(10);
+  const [shapeAConnectorPosition, setShapeAConnectorPosition] = useState<number>(0.5);
+  const [shapeBConnectorPosition, setShapeBConnectorPosition] = useState<number>(0.5);
+  const [shapeASide, setShapeASide] = useState<ConnectorSide>("top");
+  const [shapeBSide, setShapeBSide] = useState<ConnectorSide>("bottom");
 
+  // Shape A & B size
+  const [shapeAWidth, setShapeAWidth] = useState<number>(100);
+  const [shapeAHeight, setShapeAHeight] = useState<number>(100);
+  const [shapeBWidth, setShapeBWidth] = useState<number>(100);
+  const [shapeBHeight, setShapeBHeight] = useState<number>(100);
 
-  // Shape A & B size (split)
-  const [shapeAWidth, setShapeAWidth] = useState(100);
-  const [shapeAHeight, setShapeAHeight] = useState(100);
-  const [shapeBWidth, setShapeBWidth] = useState(100);
-  const [shapeBHeight, setShapeBHeight] = useState(100);
-
-  // Rectangles
+  // Rectangles state
   const [rects, setRects] = useState<Rect[]>([
     { position: { x: 150, y: 200 }, size: { width: shapeAWidth, height: shapeAHeight } },
     { position: { x: 500, y: 500 }, size: { width: shapeBWidth, height: shapeBHeight } },
@@ -100,24 +102,44 @@ function App() {
   }, [shapeAWidth, shapeAHeight, shapeBWidth, shapeBHeight]);
 
   useEffect(() => {
-    const [cp1, cp2] = getConnectionPoints(
-      rects,
-      shapeAConnectorPosition,
-      shapeBConnectorPosition,
-      shapeASide,
-      shapeBSide
-    );
-    const [rect1, rect2] = rects;
+    try {
+      const [cp1, cp2] = getConnectionPoints(
+        rects,
+        shapeAConnectorPosition,
+        shapeBConnectorPosition,
+        shapeASide,
+        shapeBSide
+      );
 
-    const { path, graph, horizontal, vertical } = dataConverter(
-      rect1, rect2, cp1, cp2, shapeMargin
-    );
+      const [rect1, rect2] = rects;
 
-    setGraph(graph);
-    setHorizontal(horizontal);
-    setVertical(vertical);
-    setPathPoints(path);
-  }, [rects, shapeMargin, shapeAConnectorPosition, shapeBConnectorPosition, shapeASide, shapeBSide,]);
+      const {
+        path,
+        graph,
+        horizontal,
+        vertical,
+      } = dataConverter(rect1, rect2, cp1, cp2, shapeMargin);
+
+      setGraph(graph);
+      setHorizontal(horizontal);
+      setVertical(vertical);
+      setPathPoints(path);
+    } catch (error: any) {
+      console.error("Data conversion error:", error.message);
+      alert(`Ошибка: ${error.message}`);
+      setPathPoints([]);
+      setGraph(new Map());
+      setHorizontal([]);
+      setVertical([]);
+    }
+  }, [
+    rects,
+    shapeMargin,
+    shapeAConnectorPosition,
+    shapeBConnectorPosition,
+    shapeASide,
+    shapeBSide,
+  ]);
 
 
   return (
@@ -127,12 +149,10 @@ function App() {
         connectionPoints={connectionPoints}
         path={pathPoints}
         graph={graph}
-        horizontalLines={horizontal}
-        verticalLines={vertical}
+        horizontalLines={horizontal ?? []}
+        verticalLines={vertical ?? []}
         onRectsChange={setRects}
         showRectLines={showRectLines}
-        pathPoints={pathPoints}
-        showPathPoints={showPathPoints}
         showWeightedGraph={showWeightedGraph}
         showShortestPath={showShortestPath}
       />

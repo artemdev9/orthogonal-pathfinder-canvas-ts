@@ -1,4 +1,5 @@
 import React from "react";
+import type { ConnectorSide } from "../types/types";
 
 // Types for the props
 interface ControlPanelProps {
@@ -20,6 +21,10 @@ interface ControlPanelProps {
     shapeBSize: { width: number; height: number };
     onShapeASizeChange: (size: { width?: number; height?: number }) => void;
     onShapeBSizeChange: (size: { width?: number; height?: number }) => void;
+    shapeASide: ConnectorSide;
+    shapeBSide: ConnectorSide;
+    setShapeASide: (side: ConnectorSide) => void;
+    setShapeBSide: (side: ConnectorSide) => void;
 }
 
 const ControlPanel = ({
@@ -166,7 +171,7 @@ const ControlPanel = ({
             <Section title="Стороны конектора">
                 <label>
                     Сторона A:
-                    <select value={shapeASide} onChange={(e) => setShapeASide(e.target.value as any)}>
+                    <select value={shapeASide} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setShapeASide(e.target.value as ConnectorSide)}>
                         <option value="top">Верх</option>
                         <option value="bottom">Низ</option>
                         <option value="left">Лево</option>
@@ -176,7 +181,7 @@ const ControlPanel = ({
                 <br />
                 <label>
                     Сторона B:
-                    <select value={shapeBSide} onChange={(e) => setShapeBSide(e.target.value as any)}>
+                    <select value={shapeBSide} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setShapeBSide(e.target.value as ConnectorSide)}>
                         <option value="top">Верх</option>
                         <option value="bottom">Низ</option>
                         <option value="left">Лево</option>
