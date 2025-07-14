@@ -78,16 +78,12 @@ function App() {
   ]);
 
   // Connection logic
-  const connectionPoints = useMemo(
-    () =>
-      getConnectionPoints(
-        rects,
-        shapeAConnectorPosition,
-        shapeBConnectorPosition,
-        shapeASide,
-        shapeBSide
-      ),
-    [rects, shapeAConnectorPosition, shapeBConnectorPosition, shapeASide, shapeBSide]
+  const connectionPoints = getConnectionPoints(
+    rects,
+    shapeAConnectorPosition,
+    shapeBConnectorPosition,
+    shapeASide,
+    shapeBSide
   );
 
   const [pathPoints, setPathPoints] = useState<Point[]>([]);
@@ -104,10 +100,16 @@ function App() {
   }, [shapeAWidth, shapeAHeight, shapeBWidth, shapeBHeight]);
 
   useEffect(() => {
-    const [cp1, cp2] = connectionPoints;
+    const [cp1, cp2] = getConnectionPoints(
+      rects,
+      shapeAConnectorPosition,
+      shapeBConnectorPosition,
+      shapeASide,
+      shapeBSide
+    );
     const [rect1, rect2] = rects;
 
-    const { gridPoints, graph, horizontal, vertical, path } = dataConverter(
+    const { path, graph, horizontal, vertical } = dataConverter(
       rect1, rect2, cp1, cp2, shapeMargin
     );
 
@@ -115,7 +117,8 @@ function App() {
     setHorizontal(horizontal);
     setVertical(vertical);
     setPathPoints(path);
-  }, [rects, shapeMargin]);
+  }, [rects, shapeMargin, shapeAConnectorPosition, shapeBConnectorPosition, shapeASide, shapeBSide,]);
+
 
   return (
     <>
