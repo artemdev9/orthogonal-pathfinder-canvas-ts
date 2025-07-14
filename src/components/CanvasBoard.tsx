@@ -11,11 +11,17 @@ type Props = {
     horizontalLines: number[];
     verticalLines: number[];
     onRectsChange: (updatedRects: Rect[]) => void;
+    showRectLines: boolean;
+    showPathPoints: boolean;
+    showWeightedGraph: boolean;
+    showShortestPath: boolean;
 };
 
+// showPathPoints={showPathPoints}
+// showWeightedGraph={showWeightedGraph}
+// showShortestPath={showShortestPath}
 
-
-const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, verticalLines, onRectsChange }: Props) => {
+const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, verticalLines, onRectsChange, showRectLines, showPathPoints, showWeightedGraph, showShortestPath }: Props) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const offsetRef = useRef<Point>({ x: 0, y: 0 });
@@ -38,30 +44,6 @@ const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, ve
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // // Draw grid lines if provided
-        // if (horizontalLines) {
-        //     ctx.strokeStyle = "#e0e0e0";
-        //     ctx.lineWidth = 1;
-        //     horizontalLines.forEach(y => {
-        //         ctx.beginPath();
-        //         ctx.moveTo(0, y);
-        //         ctx.lineTo(canvas.width, y);
-        //         ctx.stroke();
-        //     });
-        // }
-        // if (verticalLines) {
-        //     ctx.strokeStyle = "#e0e0e0";
-        //     ctx.lineWidth = 1;
-        //     verticalLines.forEach(x => {
-        //         ctx.beginPath();
-        //         ctx.moveTo(x, 0);
-        //         ctx.lineTo(x, canvas.height);
-        //         ctx.stroke();
-        //     });
-        // }
-
-
-        // Прямоугольники
         ctx.fillStyle = "#66aaff";
         rects.forEach((rect) => {
             const { x, y } = rect.position;
@@ -69,7 +51,6 @@ const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, ve
             ctx.fillRect(x - width / 2, y - height / 2, width, height);
         });
 
-        // Точки подключения
         ctx.fillStyle = "#b1f4e3";
         connectionPoints.forEach((p) => {
             ctx.beginPath();
@@ -77,66 +58,82 @@ const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, ve
             ctx.fill();
         });
 
-
-
-        // Draw horizontal and vertical lines from each point (light gray)
-        ctx.strokeStyle = "#000000";
-        ctx.lineWidth = 1;
-
-        // path.forEach((p) => {
-        //     // Horizontal line
-        //     ctx.beginPath();
-        //     ctx.moveTo(0, p.y);
-        //     ctx.lineTo(canvas.width, p.y);
-        //     ctx.stroke();
-
-        //     // Vertical line
-        //     ctx.beginPath();
-        //     ctx.moveTo(p.x, 0);
-        //     ctx.lineTo(p.x, canvas.height);
-        //     ctx.stroke();
-        // });
-
-        // 🔴 Draw the path as a red line
-        if (path.length > 1) {
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(path[0].x, path[0].y);
-            for (let i = 1; i < path.length; i++) {
-                ctx.lineTo(path[i].x, path[i].y);
-            }
-            ctx.stroke();
-        }
-
-
-        if (graph) {
-            ctx.strokeStyle = "gray";
-            ctx.lineWidth = 1;
-            ctx.font = "12px Arial";
-            ctx.fillStyle = "white"; // 👈 make sure the text is visible on dark background
-
-            for (const { point, neighbors } of graph.values()) {
-                neighbors.forEach(({ point: neighbor, weight }) => {
-                    // 🟠 draw edge
+        if (showRectLines) {
+            if (horizontalLines) {
+                ctx.strokeStyle = "#e0e0e0";
+                ctx.lineWidth = 1;
+                horizontalLines.forEach(y => {
                     ctx.beginPath();
-                    ctx.moveTo(point.x, point.y);
-                    ctx.lineTo(neighbor.x, neighbor.y);
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
                     ctx.stroke();
-
-                    // 🏷 draw weight
-                    const midX = (point.x + neighbor.x) / 2;
-                    const midY = (point.y + neighbor.y) / 2;
-                    ctx.fillText(weight.toFixed(0), midX + 4, midY - 4);
                 });
-
-                // 🔶 draw point (already visible)
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
-                ctx.fillStyle = "orange";
-                ctx.fill();
+            }
+            if (verticalLines) {
+                ctx.strokeStyle = "#e0e0e0";
+                ctx.lineWidth = 1;
+                verticalLines.forEach(x => {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                });
             }
         }
+
+        if (showWeightedGraph) {
+            if (graph) {
+                ctx.strokeStyle = "gray";
+                ctx.lineWidth = 1;
+                ctx.font = "12px Arial";
+                ctx.fillStyle = "white"; // 👈 make sure the text is visible on dark background
+
+                for (const { point, neighbors } of graph.values()) {
+                    neighbors.forEach(({ point: neighbor, weight }) => {
+                        // 🟠 draw edge
+                        ctx.beginPath();
+                        ctx.moveTo(point.x, point.y);
+                        ctx.lineTo(neighbor.x, neighbor.y);
+                        ctx.stroke();
+
+                        // 🏷 draw weight
+                        const midX = (point.x + neighbor.x) / 2;
+                        const midY = (point.y + neighbor.y) / 2;
+                        ctx.fillText(weight.toFixed(0), midX + 4, midY - 4);
+                    });
+
+                    // 🔶 draw point (already visible)
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+                    ctx.fillStyle = "orange";
+                    ctx.fill();
+                }
+            }
+        }
+
+        if (showShortestPath) {
+            if (path.length > 1) {
+                ctx.strokeStyle = "red";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+
+                ctx.moveTo(connectionPoints[0].point.x, connectionPoints[0].point.y);
+                ctx.lineTo(path[0].x, path[0].y);
+
+                for (let i = 1; i < path.length; i++) {
+                    ctx.lineTo(path[i].x, path[i].y);
+                }
+
+                ctx.lineTo(connectionPoints[1].point.x, connectionPoints[1].point.y);
+                ctx.stroke();
+            } else {
+                // ❗ Draw warning text
+                ctx.fillStyle = "yellow";
+                ctx.font = "bold 20px Arial";
+                ctx.fillText("⚠️ No shortest path available", 40, 40);
+            }
+        }
+
 
         // Линия
         // Remove path drawing logic, only show points

@@ -1,6 +1,6 @@
-import type { Point, Rect, ConnectionPoint } from "../types/types";
+import type { Point, Rect, ConnectionPoint, Graph, PathNode, Direction } from "../types/types";
 
-function getHorizontalLines(rects: Rect[], connections: ConnectionPoint[], margin = 20): number[] {
+function getHorizontalLines(rects: Rect[], connections: ConnectionPoint[], margin: number): number[] {
     const lines = new Set<number>();
 
     rects.forEach(rect => {
@@ -19,7 +19,7 @@ function getHorizontalLines(rects: Rect[], connections: ConnectionPoint[], margi
     return Array.from(lines).sort((a, b) => a - b);
 }
 
-function getVerticalLines(rects: Rect[], connections: ConnectionPoint[], margin = 20): number[] {
+function getVerticalLines(rects: Rect[], connections: ConnectionPoint[], margin: number): number[] {
     const lines = new Set<number>();
 
     rects.forEach(rect => {
@@ -133,8 +133,6 @@ function buildStructuredGraph(
     return graph;
 }
 
-
-
 function printGrid(
     grid: Map<number, Map<number, Point>>,
     xCoords: number[],
@@ -205,7 +203,7 @@ function getConnectionDirection(rect: Rect, conn: ConnectionPoint): "left" | "ri
     return null;
 }
 
-export function shiftConnectionOutward(rect: Rect, conn: ConnectionPoint, margin: number): Point {
+function shiftConnectionOutward(rect: Rect, conn: ConnectionPoint, margin: number): Point {
     const side = getConnectionDirection(rect, conn);
     if (!side) return conn.point;
 
@@ -218,12 +216,6 @@ export function shiftConnectionOutward(rect: Rect, conn: ConnectionPoint, margin
         case "bottom": return { x, y: y + margin };
         default: return conn.point;
     }
-}
-
-type Graph = Map<string, { point: Point; neighbors: { point: Point; weight: number }[] }>;
-
-function pointKey(p: Point): string {
-    return `${p.x}:${p.y}`;
 }
 
 function distance(a: Point, b: Point): number {
@@ -259,16 +251,110 @@ export function buildGraph(points: Point[]): Graph {
     return graph;
 }
 
+function pointKey(point: Point): string {
+    return `${point.x}:${point.y}`;
+}
+
+function getDirection(from: Point, to: Point): Direction | null {
+    if (from.x === to.x) {
+        return from.y > to.y ? "up" : "down";
+    }
+    if (from.y === to.y) {
+        return from.x > to.x ? "left" : "right";
+    }
+    return null; // diagonal or same point
+}
+
+export function dijkstraShortestPath(graph: Graph, start: Point, end: Point): Point[] {
+    const startKey = pointKey(start);
+    const endKey = pointKey(end);
+    const turnPenalty = 5; // Increase to penalize turns more strongly
+
+    if (!graph.has(startKey) || !graph.has(endKey)) {
+        console.warn("Start or end point does not exist in the graph.");
+        return [];
+    }
+
+    const distances = new Map<string, number>();
+    const previous = new Map<string, string | null>();
+    const directions = new Map<string, Direction | null>();
+    const visited = new Set<string>();
+    const queue: PathNode[] = [];
+
+    for (const key of graph.keys()) {
+        distances.set(key, Infinity);
+        previous.set(key, null);
+        directions.set(key, null);
+    }
+
+    distances.set(startKey, 0);
+    queue.push({ point: start, priority: 0, prevDirection: null });
+
+    while (queue.length > 0) {
+        queue.sort((a, b) => a.priority - b.priority);
+        const current = queue.shift()!;
+        const currentKey = pointKey(current.point);
+        const currentDirection = current.prevDirection;
+
+        if (visited.has(currentKey)) continue;
+        visited.add(currentKey);
+
+        if (currentKey === endKey) break;
+
+        const node = graph.get(currentKey);
+        if (!node) continue;
+
+        for (const neighbor of node.neighbors) {
+            const neighborKey = pointKey(neighbor.point);
+            const moveDirection = getDirection(current.point, neighbor.point);
+            if (!moveDirection) continue;
+
+            const turnCost = currentDirection && moveDirection !== currentDirection ? turnPenalty : 0;
+            const altDistance = distances.get(currentKey)! + neighbor.weight + turnCost;
+
+            if (altDistance < distances.get(neighborKey)!) {
+                distances.set(neighborKey, altDistance);
+                previous.set(neighborKey, currentKey);
+                directions.set(neighborKey, moveDirection);
+                queue.push({
+                    point: neighbor.point,
+                    priority: altDistance,
+                    prevDirection: moveDirection,
+                });
+            }
+        }
+    }
+
+    // Reconstruct path
+    const path: Point[] = [];
+    let currentKey: string | null = endKey;
+
+    while (currentKey) {
+        const node = graph.get(currentKey);
+        if (!node) break;
+        path.unshift(node.point);
+        currentKey = previous.get(currentKey) || null;
+    }
+
+    if (path.length === 0 || pointKey(path[0]) !== startKey) {
+        console.warn("No path found");
+        return [];
+    }
+
+    return path;
+}
+
 export const dataConverter = (
     rect1: Rect,
     rect2: Rect,
     cPoint1: ConnectionPoint,
-    cPoint2: ConnectionPoint
+    cPoint2: ConnectionPoint,
+    shapeMargin
 ): { gridPoints: Point[]; graph: Graph } => {
     const rects = [rect1, rect2];
     const connections = [cPoint1, cPoint2];
 
-    const margin = 20;
+    const margin = shapeMargin;
 
     let horizontal = getHorizontalLines(rects, connections, margin);
     let vertical = getVerticalLines(rects, connections, margin);
@@ -277,9 +363,7 @@ export const dataConverter = (
     const boundingVerticals = [minX, maxX];
     const boundingHorizontals = [minY, maxY];
 
-    console.log('Bounding box:', { minX, maxX, minY, maxY });
-    console.log('Bounding verticals:', boundingVerticals);
-    console.log('Bounding horizontals:', boundingHorizontals);
+
 
     vertical.push(...boundingVerticals);
     horizontal.push(...boundingHorizontals);
@@ -287,29 +371,20 @@ export const dataConverter = (
     connections.forEach((conn, i) => {
         const rect = rects[i];
         const side = getConnectionDirection(rect, conn);
-        console.log(`Connection ${i} direction:`, side);
         if (!side) return;
 
         if (side === "left" || side === "right") {
-            // Horizontal connection → horizontal line at Y
             horizontal.push(conn.point.y);
-            console.log(`Added horizontal line for connection ${i}:`, conn.point.y);
         } else if (side === "top" || side === "bottom") {
-            // Vertical connection → vertical line at X
             vertical.push(conn.point.x);
-            console.log(`Added vertical line for connection ${i}:`, conn.point.x);
         }
     });
 
     horizontal = Array.from(new Set(horizontal)).sort((a, b) => a - b);
     vertical = Array.from(new Set(vertical)).sort((a, b) => a - b);
 
-    console.log('Final horizontal lines:', horizontal);
-    console.log('Final vertical lines:', vertical);
 
     let gridPoints = getEnhancedGridPoints(horizontal, vertical);
-    console.log('Grid points before filtering:', gridPoints);
-    // let gridPoints = getGridPoints(horizontal, vertical);
 
     gridPoints = gridPoints.filter(point => {
         const isOnBoundingLine =
@@ -321,19 +396,16 @@ export const dataConverter = (
         return !rects.some(rect => isPointInsideRectWithMargin(point, rect, margin));
     });
 
-    console.log('Grid points after filtering:', gridPoints);
 
     for (let i = 0; i < connections.length; i++) {
         const conn = connections[i];
         const rect = rects[i];
 
         const shifted = shiftConnectionOutward(rect, conn, margin);
-        console.log(`Shifted connection point ${i}:`, shifted);
 
         const alreadyExists = gridPoints.some(p => p.x === shifted.x && p.y === shifted.y);
         if (!alreadyExists) {
             gridPoints.push(shifted);
-            console.log(`Added shifted connection point ${i} to gridPoints.`);
         }
     }
 
@@ -341,10 +413,7 @@ export const dataConverter = (
         new Map(gridPoints.map(p => [pointKey(p), p])).values()
     );
 
-    // const graph = buildGraph(gridPoints);
 
-    console.log('Final grid points: ', gridPoints);
-    // console.log('Graph structure:', graph);
 
 
     const grid2D = new Map<number, Map<number, Point>>();
@@ -362,7 +431,15 @@ export const dataConverter = (
 
     const graph = buildStructuredGraph(gridPoints, grid2D, xCoords, yCoords);
 
+    const start = shiftConnectionOutward(rect1, cPoint1, margin);
+    const end = shiftConnectionOutward(rect2, cPoint2, margin);
+    let path;
 
+    if (graph.has(pointKey(start)) && graph.has(pointKey(end))) {
+        path = dijkstraShortestPath(graph, start, end);
+    } else {
+        console.warn("Start or end point missing from graph:", start, end);
+    }
 
-    return { gridPoints, graph, horizontal, vertical };
+    return { gridPoints, graph, horizontal, vertical, path };
 };
