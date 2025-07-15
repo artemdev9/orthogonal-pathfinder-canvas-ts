@@ -15,10 +15,6 @@ type Props = {
     showShortestPath: boolean;
 };
 
-// showPathPoints={showPathPoints}
-// showWeightedGraph={showWeightedGraph}
-// showShortestPath={showShortestPath}
-
 const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, verticalLines, onRectsChange, showRectLines, showWeightedGraph, showShortestPath }: Props) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -84,23 +80,20 @@ const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, ve
                 ctx.strokeStyle = "gray";
                 ctx.lineWidth = 1;
                 ctx.font = "12px Arial";
-                ctx.fillStyle = "white"; // 👈 make sure the text is visible on dark background
+                ctx.fillStyle = "white"; 
 
                 for (const { point, neighbors } of graph.values()) {
                     neighbors.forEach(({ point: neighbor, weight }) => {
-                        // 🟠 draw edge
                         ctx.beginPath();
                         ctx.moveTo(point.x, point.y);
                         ctx.lineTo(neighbor.x, neighbor.y);
                         ctx.stroke();
 
-                        // 🏷 draw weight
                         const midX = (point.x + neighbor.x) / 2;
                         const midY = (point.y + neighbor.y) / 2;
                         ctx.fillText(weight.toFixed(0), midX + 4, midY - 4);
                     });
 
-                    // 🔶 draw point (already visible)
                     ctx.beginPath();
                     ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
                     ctx.fillStyle = "orange";
@@ -125,7 +118,6 @@ const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, ve
                 ctx.lineTo(connectionPoints[1].point.x, connectionPoints[1].point.y);
                 ctx.stroke();
             } else {
-                // ❗ Draw warning text
                 ctx.fillStyle = "yellow";
                 ctx.font = "bold 20px Arial";
                 ctx.fillText("⚠️ No shortest path available", 40, 40);
@@ -134,7 +126,6 @@ const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, ve
 
     }, [rects, connectionPoints, path, graph, horizontalLines, verticalLines, canvasSize]);
 
-    //  helper functions rect dragging 
     function isRectHit(rect: Rect, point: Point): boolean {
         const left = rect.position.x - rect.size.width / 2;
         const right = rect.position.x + rect.size.width / 2;
@@ -179,8 +170,6 @@ const CanvasBoard = ({ rects, connectionPoints, path, graph, horizontalLines, ve
 
     const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
         const pos = getMousePos(e);
-
-        // need to check what was pressed and then call the function responsible for that 
 
         rects.forEach((rect, i) => {
             if (isRectHit(rect, pos)) {

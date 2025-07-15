@@ -4,12 +4,8 @@ import ControlPanel from "./components/ControlPanel";
 import { dataConverter } from "./core/algorithm";
 import type { Rect, ConnectionPoint, Point, Graph, ConnectorSide } from "./types/types";
 
-// Type for connector side
-
-// Clamp connector position to [0.01, 0.99]
 const safePosition = (pos: number): number => Math.max(0.01, Math.min(0.99, pos));
 
-// Compute connection points for both shapes
 const getConnectionPoints = (
   rects: Rect[],
   shapeAConnectorPosition: number,
@@ -54,32 +50,27 @@ const getConnectionPoints = (
 };
 
 function App() {
-  // Visual toggles
   const [showRectLines, setShowRectLines] = useState<boolean>(false);
   const [showPathPoints, setShowPathPoints] = useState<boolean>(false);
   const [showWeightedGraph, setShowWeightedGraph] = useState<boolean>(false);
   const [showShortestPath, setShowShortestPath] = useState<boolean>(true);
 
-  // Shape margin & connector positions
   const [shapeMargin, setShapeMargin] = useState<number>(10);
   const [shapeAConnectorPosition, setShapeAConnectorPosition] = useState<number>(0.5);
   const [shapeBConnectorPosition, setShapeBConnectorPosition] = useState<number>(0.5);
   const [shapeASide, setShapeASide] = useState<ConnectorSide>("top");
   const [shapeBSide, setShapeBSide] = useState<ConnectorSide>("bottom");
 
-  // Shape A & B size
   const [shapeAWidth, setShapeAWidth] = useState<number>(100);
   const [shapeAHeight, setShapeAHeight] = useState<number>(100);
   const [shapeBWidth, setShapeBWidth] = useState<number>(100);
   const [shapeBHeight, setShapeBHeight] = useState<number>(100);
 
-  // Rectangles state
   const [rects, setRects] = useState<Rect[]>([
     { position: { x: 150, y: 200 }, size: { width: shapeAWidth, height: shapeAHeight } },
     { position: { x: 500, y: 500 }, size: { width: shapeBWidth, height: shapeBHeight } },
   ]);
 
-  // Connection logic
   const connectionPoints = getConnectionPoints(
     rects,
     shapeAConnectorPosition,
@@ -93,7 +84,6 @@ function App() {
   const [horizontal, setHorizontal] = useState<number[]>();
   const [vertical, setVertical] = useState<number[]>();
 
-  // Sync rect size with dimension changes
   useEffect(() => {
     setRects([
       { ...rects[0], size: { width: shapeAWidth, height: shapeAHeight } },

@@ -10,7 +10,6 @@ export function getHorizontalLines(rects: Rect[], margin: number): number[] {
         lines.add(bottom);
     });
 
-
     return Array.from(lines).sort((a, b) => a - b);
 }
 
@@ -93,22 +92,18 @@ export function isValidConnectionAngle(point: Point, angle: number, rect: Rect):
 
     const tolerance = 0.5;
 
-    // Top edge ➡️ angle should be 90 (pointing up)
     if (Math.abs(point.y - top) < tolerance && point.x >= left - tolerance && point.x <= right + tolerance) {
         return angle === 90;
     }
 
-    // Bottom edge ➡️ angle should be 270 (pointing down)
     if (Math.abs(point.y - bottom) < tolerance && point.x >= left - tolerance && point.x <= right + tolerance) {
         return angle === 270;
     }
 
-    // Left edge ➡️ angle should be 0 (pointing left)
     if (Math.abs(point.x - left) < tolerance && point.y >= top - tolerance && point.y <= bottom + tolerance) {
         return angle === 0;
     }
 
-    // Right edge ➡️ angle should be 180 (pointing right)
     if (Math.abs(point.x - right) < tolerance && point.y >= top - tolerance && point.y <= bottom + tolerance) {
         return angle === 180;
     }
@@ -130,7 +125,6 @@ function buildStructuredGraph(
         const xIndex = xCoords.indexOf(p.x);
         const yIndex = yCoords.indexOf(p.y);
 
-        // Scan LEFT
         for (let i = xIndex - 1; i >= 0; i--) {
             const x = xCoords[i];
             const exists = grid2D.get(p.y)?.get(x);
@@ -140,8 +134,6 @@ function buildStructuredGraph(
                 break;
             }
         }
-
-        // Scan RIGHT
         for (let i = xIndex + 1; i < xCoords.length; i++) {
             const x = xCoords[i];
             const exists = grid2D.get(p.y)?.get(x);
@@ -152,7 +144,6 @@ function buildStructuredGraph(
             }
         }
 
-        // Scan UP
         for (let i = yIndex - 1; i >= 0; i--) {
             const y = yCoords[i];
             const exists = grid2D.get(y)?.get(p.x);
@@ -163,7 +154,6 @@ function buildStructuredGraph(
             }
         }
 
-        // Scan DOWN
         for (let i = yIndex + 1; i < yCoords.length; i++) {
             const y = yCoords[i];
             const exists = grid2D.get(y)?.get(p.x);
@@ -193,19 +183,16 @@ export function getEnhancedGridPoints(horizontal: number[], vertical: number[]):
             const x2 = vertical[xi + 1];
             const cx = (x1 + x2) / 2;
 
-            // Add corners
             points.push({ x: x1, y: y1 }); // NW
             points.push({ x: x2, y: y1 }); // NE
             points.push({ x: x2, y: y2 }); // SE
             points.push({ x: x1, y: y2 }); // SW
 
-            // Add edges
             points.push({ x: cx, y: y1 }); // N
             points.push({ x: x2, y: cy }); // E
             points.push({ x: cx, y: y2 }); // S
             points.push({ x: x1, y: cy }); // W
 
-            // Add center
             points.push({ x: cx, y: cy }); // C
         }
     }
@@ -262,13 +249,13 @@ function getDirection(from: Point, to: Point): Direction | null {
     if (from.y === to.y) {
         return from.x > to.x ? "left" : "right";
     }
-    return null; // diagonal or same point
+    return null;
 }
 
 export function dijkstraShortestPath(graph: Graph, start: Point, end: Point): Point[] {
     const startKey = pointKey(start);
     const endKey = pointKey(end);
-    const turnPenalty = 5; // Increase to penalize turns more strongly
+    const turnPenalty = 5;
 
     if (!graph.has(startKey) || !graph.has(endKey)) {
         console.warn("Start or end point does not exist in the graph.");
@@ -325,7 +312,6 @@ export function dijkstraShortestPath(graph: Graph, start: Point, end: Point): Po
         }
     }
 
-    // Reconstruct path
     const path: Point[] = [];
     let currentKey: string | null = endKey;
 

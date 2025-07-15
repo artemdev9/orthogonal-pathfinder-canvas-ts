@@ -14,22 +14,22 @@ describe('Validation Functions', () => {
     const rect: Rect = { position: { x: 100, y: 100 }, size: { width: 50, height: 50 } };
 
     test('Point on edge', () => {
-        const point: Point = { x: 125, y: 100 }; // Right edge
+        const point: Point = { x: 125, y: 100 };
         expect(isPointOnRectEdge(point, rect)).toBe(true);
     });
 
     test('Point not on edge', () => {
-        const point: Point = { x: 100, y: 100 }; // Center
+        const point: Point = { x: 100, y: 100 };
         expect(isPointOnRectEdge(point, rect)).toBe(false);
     });
 
     test('Correct angle on top edge', () => {
-        const point: Point = { x: 100, y: 75 }; // Top edge
+        const point: Point = { x: 100, y: 75 };
         expect(isValidConnectionAngle(point, 90, rect)).toBe(true);
     });
 
     test('Wrong angle on right edge', () => {
-        const point: Point = { x: 125, y: 100 }; // Right edge
+        const point: Point = { x: 125, y: 100 };
         expect(isValidConnectionAngle(point, 90, rect)).toBe(false);
     });
 });
@@ -43,22 +43,22 @@ describe('Grid Line Functions', () => {
     test('Get horizontal lines', () => {
         const lines = getHorizontalLines(rects, margin);
         expect(lines.length).toBe(2);
-        expect(lines[0]).toBeCloseTo(65); // top
-        expect(lines[1]).toBeCloseTo(135); // bottom
+        expect(lines[0]).toBeCloseTo(65);
+        expect(lines[1]).toBeCloseTo(135);
     });
 
     test('Get vertical lines', () => {
         const lines = getVerticalLines(rects, margin);
         expect(lines.length).toBe(2);
-        expect(lines[0]).toBeCloseTo(65); // left
-        expect(lines[1]).toBeCloseTo(135); // right
+        expect(lines[0]).toBeCloseTo(65);
+        expect(lines[1]).toBeCloseTo(135);
     });
 
     test('Enhanced grid point count', () => {
         const h = [65, 100, 135];
         const v = [65, 100, 135];
         const points = getEnhancedGridPoints(h, v);
-        expect(points.length).toBe((v.length - 1) * (h.length - 1) * 9); // 2x2 cells * 9 points
+        expect(points.length).toBe((v.length - 1) * (h.length - 1) * 9);
     });
 });
 
@@ -77,7 +77,7 @@ describe('Pathfinding: dijkstraShortestPath', () => {
 
     test('Returns empty path when disconnected', () => {
         const graph: Graph = new Map();
-        graph.set('0:0', { point: a, neighbors: [] }); // no connection to b
+        graph.set('0:0', { point: a, neighbors: [] });
 
         const path = dijkstraShortestPath(graph, a, b);
         expect(path).toEqual([]);
