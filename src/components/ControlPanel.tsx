@@ -171,7 +171,7 @@ const ControlPanel = ({
 
             <Section title="Стороны конектора">
                 <label>
-                    Сторона A:
+                    Коннектор 1:
                     <select value={shapeASide} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setShapeASide(e.target.value as ConnectorSide)}>
                         <option value="top">Верх</option>
                         <option value="bottom">Низ</option>
@@ -181,7 +181,7 @@ const ControlPanel = ({
                 </label>
                 <br />
                 <label>
-                    Сторона B:
+                    Коннектор 2:
                     <select value={shapeBSide} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setShapeBSide(e.target.value as ConnectorSide)}>
                         <option value="top">Верх</option>
                         <option value="bottom">Низ</option>
