@@ -71,7 +71,7 @@ const ControlPanel = ({
                 <ul style={{ paddingLeft: 20 }}>
                     <li>Нажать на квадрат что бы перетаскивать мышкой</li>
                     <li>Менять точки</li>
-                    <li> <a> </a> </li>
+                    <li> <a href="https://github.com/artemdev9/orthogonal-pathfinder-canvas-ts" target="_blank" rel="noopener noreferrer">GitHub репозиторий проекта</a> </li>
                 </ul>
             </Section>
 
