@@ -67,29 +67,29 @@ const ControlPanel = ({
                 boxShadow: "0 0 12px rgba(0,0,0,0.3)",
             }}
         >
-            <Section title="Как использовать">
+            <Section title="How to Use">
                 <ul style={{ paddingLeft: 20 }}>
-                    <li>Нажать на квадрат что бы перетаскивать мышкой</li>
-                    <li>Менять точки</li>
-                    <li> <a href="https://github.com/artemdev9/orthogonal-pathfinder-canvas-ts" target="_blank" rel="noopener noreferrer">GitHub репозиторий проекта</a> </li>
+                    <li>Click on a rectangle to drag it with your mouse</li>
+                    <li>Change connection points</li>
+                    <li> <a href="https://github.com/artemdev9/orthogonal-pathfinder-canvas-ts" target="_blank" rel="noopener noreferrer">GitHub repository</a> </li>
                 </ul>
             </Section>
 
             <Divider />
 
-            <Section title="Уровни алгоритма">
+            <Section title="Algorithm Visualization">
                 <Checkbox
-                    label="Линии Фигур"
+                    label="Shape Boundaries"
                     checked={showRectLines}
                     onChange={(e) => setShowRectLines(e.target.checked)}
                 />
                 <Checkbox
-                    label="График Растояний"
+                    label="Distance Graph"
                     checked={showWeightedGraph}
                     onChange={(e) => setShowWeightedGraph(e.target.checked)}
                 />
                 <Checkbox
-                    label="Короткий Путь"
+                    label="Shortest Path"
                     checked={showShortestPath}
                     onChange={(e) => setShowShortestPath(e.target.checked)}
                 />
@@ -97,10 +97,10 @@ const ControlPanel = ({
 
             <Divider />
 
-            <Section title="Настройки">
+            <Section title="Settings">
                 <div style={{ marginBottom: 16 }}>
                     <label style={{ marginBottom: 16 }}>
-                        Ширина:
+                        Width:
                         <input
                             type="number"
                             min={10}
@@ -110,7 +110,7 @@ const ControlPanel = ({
                         />
                     </label>
                     <label style={{ marginLeft: 16 }}>
-                        Высота:
+                        Height:
                         <input
                             type="number"
                             min={10}
@@ -122,7 +122,7 @@ const ControlPanel = ({
                 </div>
                 <div style={{ marginBottom: 16 }}>
                     <label style={{ marginBottom: 16 }}>
-                        Ширина:
+                        Width:
                         <input
                             type="number"
                             min={10}
@@ -132,7 +132,7 @@ const ControlPanel = ({
                         />
                     </label>
                     <label style={{ marginLeft: 16 }}>
-                        Высота:
+                        Height:
                         <input
                             type="number"
                             min={10}
@@ -143,14 +143,14 @@ const ControlPanel = ({
                     </label>
                 </div>
                 <Slider
-                    label="Растояние Возле Края Фигур"
+                    label="Shape Edge Margin"
                     value={shapeMargin}
                     min={0}
                     max={50}
                     onChange={setShapeMargin}
                 />
                 <Slider
-                    label="Позиция Конектора A"
+                    label="Connector A Position"
                     value={shapeAConnectorPosition}
                     min={0}
                     max={1}
@@ -158,7 +158,7 @@ const ControlPanel = ({
                     onChange={setShapeAConnectorPosition}
                 />
                 <Slider
-                    label="Позиция Конектора B"
+                    label="Connector B Position"
                     value={shapeBConnectorPosition}
                     min={0}
                     max={1}
@@ -169,24 +169,24 @@ const ControlPanel = ({
 
             <Divider />
 
-            <Section title="Стороны конектора">
+            <Section title="Connector Sides">
                 <label>
-                    Коннектор 1:
+                    Connector 1:
                     <select value={shapeASide} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setShapeASide(e.target.value as ConnectorSide)}>
-                        <option value="top">Верх</option>
-                        <option value="bottom">Низ</option>
-                        <option value="left">Лево</option>
-                        <option value="right">Право</option>
+                        <option value="top">Top</option>
+                        <option value="bottom">Bottom</option>
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
                     </select>
                 </label>
                 <br />
                 <label>
-                    Коннектор 2:
+                    Connector 2:
                     <select value={shapeBSide} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setShapeBSide(e.target.value as ConnectorSide)}>
-                        <option value="top">Верх</option>
-                        <option value="bottom">Низ</option>
-                        <option value="left">Лево</option>
-                        <option value="right">Право</option>
+                        <option value="top">Top</option>
+                        <option value="bottom">Bottom</option>
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
                     </select>
                 </label>
             </Section>
