@@ -116,7 +116,7 @@ function App() {
       setPathPoints(path);
     } catch (error: any) {
       console.error("Data conversion error:", error.message);
-      alert(`Ошибка: ${error.message}`);
+      alert(`Error: ${error.message}`);
       setPathPoints([]);
       setGraph(new Map());
       setHorizontal([]);

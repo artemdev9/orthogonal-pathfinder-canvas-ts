@@ -235,7 +235,7 @@ function shiftConnectionOutward(rect: Rect, conn: ConnectionPoint, margin: numbe
 }
 
 function distance(a: Point, b: Point): number {
-    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); // Манхэттенское
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); // Manhattan distance
 }
 
 function pointKey(point: Point): string {
